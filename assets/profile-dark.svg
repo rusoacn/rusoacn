@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="540" viewBox="0 0 1000 540" role="img" aria-labelledby="title desc">
+<title id="title">rusoacn ? terminal profile</title>
+<desc id="desc">ASCII rendering of the account avatar beside system information and verified public GitHub statistics.</desc>
+<rect x="0.5" y="0.5" width="999" height="539" rx="10" fill="#101215" stroke="#292e35"/>
+<g font-family="ui-monospace, SFMono-Regular, Consolas, Liberation Mono, monospace">
+<text x="28" y="34" font-size="18" fill="#f1eee8" text-anchor="start" font-weight="600">rusoacn@localhost</text>
+<text x="966" y="34" font-size="12" fill="#818992" text-anchor="end">PROFILE / 001</text>
+<path d="M28 51H972" stroke="#353a41" stroke-width="1"/>
+<path d="M416 67V485" stroke="#353a41" stroke-width="1"/>
+<text x="28" y="81.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">                        ....                   </text>
+<text x="28" y="93.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">                     :rX55XrXX;                </text>
+<text x="28" y="105.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">                   :XXii2Xi;;;X2:              </text>
+<text x="28" y="117.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">                 ,XAr;;rs;;;;iis5,             </text>
+<text x="28" y="129.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">                ;Xsss;isi;;;iiris3,            </text>
+<text x="28" y="141.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">               rX;ii;;;i;;;;iiiiish            </text>
+<text x="28" y="153.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">              s2;;;;s22sii;;;i;iii2s           </text>
+<text x="28" y="165.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">             :M;;;;XhMHMAi;;;;;ii;ih.          </text>
+<text x="28" y="177.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">             Ms;;;s3MMHM3i;;;;;;;;;r2          </text>
+<text x="28" y="189.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">            Xh;;;;AhMHHHhs;;;;;;;;;;5          </text>
+<text x="28" y="201.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">            Mr;;;sA23MM35X;;;;;;;;;;s;         </text>
+<text x="28" y="213.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">           ,5;;;iriX5MM5sXi;;;;;;;;;iA         </text>
+<text x="28" y="225.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">           i;;;;s5A25Hh3XAXi;;;;;;;;;A         </text>
+<text x="28" y="237.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">           i;;;;r3hhhShhMh32s;;;;;;;is         </text>
+<text x="28" y="249.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">           A;;;;;5MhhHh3MHM3X;;;;;;;sr         </text>
+<text x="28" y="261.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">          .H;;;;;Xhh353MHMh5r;;;;;;;2,         </text>
+<text x="28" y="273.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">          As;;;;;;5222253M3X;;;;;;;;X          </text>
+<text x="28" y="285.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">         ,i;;rssish32253h3Ai;;;;;;;i;          </text>
+<text x="28" y="297.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">         3&amp;M525hh5HMh3h32sri;;;;;;;X.          </text>
+<text x="28" y="309.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">        .##H#HHMHhGSHhAA222r;;;;;;;A           </text>
+<text x="28" y="321.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">        ;MHhG#SGGHMGSM5MMh2i;;;;;;Xs           </text>
+<text x="28" y="333.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">        iGSSGSSGM3GM9h3SHh5s;;;;;;Sr           </text>
+<text x="28" y="345.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">        AHMG#SSMAA3H#3hSGM3s;;;;;;h;           </text>
+<text x="28" y="357.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">        XHHHSSSSS##9GM#SGM3X;;;;;i22           </text>
+<text x="28" y="369.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">        3GGGS#S#999BS###G3Ai;;;;;r99.          </text>
+<text x="28" y="381.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">        MhMSSS#9##9#H9#SH5s;;;;;i;#@A          </text>
+<text x="28" y="393.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">       .MSGSSS#999BSH##GMH3i;;;;i;5&amp;#          </text>
+<text x="28" y="405.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">       .hHGS###999B#99#GHMAX;;;;;ir#&amp;r         </text>
+<text x="28" y="417.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">       ,3MS##99B9B9H#9#SG525;;;;;iiM@H         </text>
+<text x="28" y="429.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">       :HS##99BBB&amp;B99999SAh2;;;;irAAS&amp;:        </text>
+<text x="28" y="441.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">       ,h#999B99BB9BBBBBS5MX;;;;;;ir2Bs        </text>
+<text x="28" y="453.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">        3S#99BB9B#GBBBBB#5A;;;;;;;;;XBs        </text>
+<text x="28" y="465.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">        3GS##99BBBB&amp;BBBB#2;;;;;;;;;sS@X        </text>
+<text x="28" y="477.0" font-size="13.4" fill="#b9c0c5" text-anchor="start" xml:space="preserve">        sSS###99S9BBB&amp;&amp;B#5;;;;;;;;rS&amp;@h        </text>
+<text x="442" y="85" font-size="14" fill="#f1eee8" text-anchor="start" font-weight="600">SYSTEM</text><path d="M517 81H966" stroke="#353a41" stroke-width="1"/>
+<text x="442" y="110" font-size="15" fill="#a6adb5" text-anchor="start">OS</text><text x="966" y="110" font-size="15" fill="#d4d6d8" text-anchor="end">Windows</text>
+<text x="442" y="134" font-size="15" fill="#a6adb5" text-anchor="start">Editor</text><text x="966" y="134" font-size="15" fill="#d4d6d8" text-anchor="end">VS Code</text>
+<text x="442" y="158" font-size="15" fill="#a6adb5" text-anchor="start">Languages</text><text x="966" y="158" font-size="15" fill="#d4d6d8" text-anchor="end">Python / R / SQL</text>
+<text x="442" y="182" font-size="15" fill="#a6adb5" text-anchor="start">Field</text><text x="966" y="182" font-size="15" fill="#d4d6d8" text-anchor="end">Data Science / AI</text>
+<text x="442" y="206" font-size="15" fill="#a6adb5" text-anchor="start">Focus</text><text x="966" y="206" font-size="15" fill="#d4d6d8" text-anchor="end">Machine Learning</text>
+<text x="442" y="230" font-size="15" fill="#a6adb5" text-anchor="start">Build</text><text x="966" y="230" font-size="15" fill="#d4d6d8" text-anchor="end">Automation / Systems</text>
+<text x="442" y="271" font-size="14" fill="#f1eee8" text-anchor="start" font-weight="600">GITHUB / PUBLIC</text><path d="M598 267H966" stroke="#353a41" stroke-width="1"/>
+<text x="442" y="296" font-size="15" fill="#a6adb5" text-anchor="start">Repositories</text><text x="966" y="296" font-size="15" fill="#d4d6d8" text-anchor="end">1</text>
+<text x="442" y="320" font-size="15" fill="#a6adb5" text-anchor="start">Stars received</text><text x="966" y="320" font-size="15" fill="#d4d6d8" text-anchor="end">0</text>
+<text x="442" y="344" font-size="15" fill="#a6adb5" text-anchor="start">Followers</text><text x="966" y="344" font-size="15" fill="#d4d6d8" text-anchor="end">0</text>
+<text x="442" y="368" font-size="15" fill="#a6adb5" text-anchor="start">Following</text><text x="966" y="368" font-size="15" fill="#d4d6d8" text-anchor="end">1</text>
+<text x="442" y="409" font-size="14" fill="#f1eee8" text-anchor="start" font-weight="600">STATUS</text><path d="M517 405H966" stroke="#353a41" stroke-width="1"/>
+<text x="442" y="435" font-size="16" fill="#d4d6d8" text-anchor="start">Building systems.</text>
+<text x="442" y="459" font-size="14" fill="#818992" text-anchor="start">Exploring data, code and form.</text>
+<path d="M28 493H972" stroke="#353a41" stroke-width="1"/>
+<text x="28" y="518" font-size="15" fill="#f1eee8" text-anchor="start">rusoacn:~$ </text>
+<rect x="124" y="505" width="8" height="15" fill="#f1eee8"/>
+<text x="966" y="518" font-size="12" fill="#818992" text-anchor="end">PUBLIC PROFILE  /  DATA + SYSTEMS</text>
+</g></svg>
