@@ -15,6 +15,8 @@ OW,OH=1560,968
 AX,AY,AW,AH=0,0,820,820
 LX,RX=845,1414
 N,DELAY=24,160
+EDITOR_TOP,EDITOR_STEP=59,22
+CURSOR_BLINK_FRAMES=3
 BONE=(222,220,212); MUTED=(163,158,151); LABEL=(187,182,171)
 RUST=(177,126,115); RULE=(66,61,58); GREEN=(170,184,169); RED=(193,133,127)
 
@@ -121,8 +123,8 @@ def code_panel(d,data):
     for t in tokenize.generate_tokens(io.StringIO(source).readline):
         if t.type in (token.NAME,token.STRING,token.OP,tokenize.COMMENT):
             if t.start[0]==t.end[0]:groups.setdefault(t.start[0],[]).append(t)
-    start_y=59
-    step=22
+    start_y=EDITOR_TOP
+    step=EDITOR_STEP
     assert start_y+(len(lines)-1)*step+23<=H-8,(len(lines),H)
     for i,line in enumerate(lines,1):
         y=start_y+(i-1)*step
@@ -257,6 +259,16 @@ class CRTGlass:
         composite=curved*self.mask+self.case*(1-self.mask)
         return Image.fromarray(composite.clip(0,255).astype(np.uint8),"RGB")
 
+def draw_block_cursor(im,data):
+    # A terminal-style insertion cursor on the blank line after the code.
+    # Draw before the CRT projection so it shares the screen's glass and glow.
+    y=EDITOR_TOP+len(profile_code(data).splitlines())*EDITOR_STEP+3
+    x=LX
+    cw=round(font("mono",22).getlength("M"))
+    assert y+19<H and x+cw<RX
+    d=ImageDraw.Draw(im)
+    d.rectangle((x,y,x+cw-1,y+18),fill=(220,218,208))
+
 def main():
     data=json.loads((A/"profile-record.json").read_text(encoding="utf-8"))
     s=data["stats"];n=lambda k:int(s[k].replace(",",""))
@@ -264,6 +276,8 @@ def main():
     bg=panel(data);src=source();frames=[];crt=CRTGlass()
     for i in range(N):
         im=bg.copy();im.paste(art(i/N,src),(AX,AY))
+        if (i//CURSOR_BLINK_FRAMES)%2==0:
+            draw_block_cursor(im,data)
         frames.append(crt.render(im))
     palette=frames[0].quantize(colors=256,method=Image.Quantize.MEDIANCUT,dither=Image.Dither.NONE)
     converted=[im.quantize(palette=palette,dither=Image.Dither.NONE) for im in frames]
@@ -272,12 +286,15 @@ def main():
     converted[0].save(out,save_all=True,append_images=converted[1:],duration=DELAY,loop=0,optimize=True,disposal=1)
     with Image.open(out) as im:
         assert im.n_frames==N and im.size==(OW,OH) and im.info.get("loop")==0
-        allhash=[];right=[]
+        allhash=[];right=[];cursor_states=[]
         for i in range(N):
             im.seek(i);r=im.convert("RGB")
             allhash.append(hashlib.sha256(r.tobytes()).hexdigest())
             right.append(hashlib.sha256(r.crop((1000,0,OW,OH)).tobytes()).hexdigest())
+            cursor_states.append(hashlib.sha256(r.crop((890,0,OW,OH)).tobytes()).hexdigest())
         assert len(set(allhash))==N and len(set(right))==1
+        assert len(set(cursor_states))==2 and cursor_states.count(cursor_states[0])==N//2
+        assert all((s==cursor_states[0])==((i//CURSOR_BLINK_FRAMES)%2==0) for i,s in enumerate(cursor_states))
     assert out.stat().st_size<10_000_000,out.stat().st_size
     print("CRT_RENDER_PASS",OW,OH,N,DELAY,out.stat().st_size,flush=True)
 if __name__=="__main__":main()
