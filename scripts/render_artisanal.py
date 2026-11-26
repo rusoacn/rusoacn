@@ -238,7 +238,7 @@ class CRTGlass:
         # Edge shadow follows the actual shape of the curved glass.
         edge_shadow=1-.44*np.exp(-np.maximum(dist,0)/12)
         glass_vignette=(1-.078*u*u-.055*v*v).clip(.70,1)
-        scan=1-.105*(np.cos(sy*math.pi*2/3.35)+1)*.5
+        scan=1-.069*(np.cos(sy*math.pi*2/3.35)+1)*.5
         self.gain=(edge_shadow*glass_vignette*scan)[...,None].astype(np.float32)
         # Broad, low-energy room reflection and a fine upper-edge glint.
         reflection=(4.6*np.exp(-((u+.61)/.51)**2-((v+.89)/.20)**2)
@@ -268,7 +268,7 @@ class RasterSignal:
     def __init__(self):
         self.y,self.x=np.mgrid[0:H,0:W].astype(np.float32)
         # Preserve text legibility without splitting the moving raster.
-        self.strength=1-.64*np.clip((self.x-(AW-20))/100,0,1)
+        self.strength=.50*(1-.64*np.clip((self.x-(AW-20))/100,0,1))
         self.yi=self.y.astype(np.int32)
     def render(self,im,t):
         phase=2*math.pi*t
