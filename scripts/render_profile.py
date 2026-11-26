@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 
 ROOT=Path(__file__).resolve().parents[1]
 OWNER="rusoacn"
-W,H=1000,690
+W,H=1000,674
 COLS,ROWS=47,34
 MONO="ui-monospace, SFMono-Regular, Consolas, Liberation Mono, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans CJK KR', monospace"
 RAMP=" .,:;irsXA253hMHGS#9B&@"
@@ -59,7 +59,7 @@ def render(mode,data,grid,mask):
     def project(y,name,description,detail):
         return (f'<text x="442" y="{y}" font-size="15">'
                 f'<tspan fill="{key_color}" font-weight="600">{escape(name)}</tspan>'
-                f'<tspan fill="{value_color}"> | {escape(description)}</tspan></text>'
+                + (f'<tspan fill="{value_color}"> | {escape(description)}</tspan>' if description else "") + '</text>'
                 +t(454,y+18,"- "+detail,c["muted"],13))
     art=[]
     # Render the full scene with tonal glyphs. Low-density areas fade into the
@@ -87,7 +87,7 @@ def render(mode,data,grid,mask):
         '<desc id="desc">ASCII account avatar beside education, completed team projects, competition results, independent work, ADsP certification, a dated contribution snapshot and a reported single-video view count.</desc>',
         f'<rect x="0.5" y="0.5" width="{W-1}" height="{H-1}" rx="10" fill="{c["bg"]}" stroke="{c["border"]}"/>',
         f'<g font-family="{MONO}">',
-        t(28,34,"PROFILE / 004",c["muted"],12),
+        t(28,34,"PROFILE / 005",c["muted"],12),
         t(442,34,"rusoacn@localhost",c["accent"],18,weight="600"),
         *art,
         section(62,"- SYSTEM"),
@@ -98,25 +98,24 @@ def render(mode,data,grid,mask):
         row(161,"Languages","Python / R / SQL"),
         section(190,"- COMPLETED PROJECTS"),
         project(213,"G-순환","Policy Decision Support (MVP)","Finalist / In-person PT - Gyeongnam Big Data 2026 (T2)"),
-        project(255,"부산물 시뮬레이터","Supply & Facility Linkage","Gyeongnam Big Data Competition 2026 / Track 1 entry"),
+        project(255,"경남 농산물 부산물 공급·활용 시뮬레이터","","Gyeongnam Big Data Competition 2026 / Track 1 entry"),
         project(297,"K League","Ranking Forecasting","2026 Big Data Day / Team project"),
         project(339,"파손 택배 탐지","YOLO / Raspberry Pi","2024 Summer Software Project / Team project"),
         section(383,"- AWARDS / RESULTS"),
-        row(405,"Software Project '24","3rd place (team record)"),
-        row(425,"Big Data Day '26","2nd place / 2 teams"),
+        row(405,"Software Project '24","3rd place"),
+        row(425,"Big Data Day '26","2nd place"),
         section(453,"- INDEPENDENT WORK"),
         row(475,"CCC-lib","AI Continuity System (WIP)"),
         row(495,"Smart Factory","Predictive Maintenance MVP"),
-        row(515,"AI Creative","Generative Video Production"),
+        row(515,"AI Creative","Generative AI Video (~40K views on IG)*"),
         section(543,"- RECORD"),
         row(565,"Certification","ADsP"),
         row(585,"Contributions (1y)","5,503 (2026-11-26)"),
-        row(605,"Instagram Video","~40K views*"),
-        t(442,628,"* Single video; Aug 2026 record (self-reported).",c["muted"],12),
-        line(28,648,972),
-        t(28,673,"rusoacn:~$ ",c["accent"],15),
-        f'<rect x="124" y="660" width="8" height="15" fill="{c["accent"]}"/>',
-        t(966,673,"DATA / AI / SYSTEMS",c["muted"],12,"end"),
+        t(442,611,"* Single video; Aug 2026 record (self-reported).",c["muted"],12),
+        line(28,632,972),
+        t(28,657,"rusoacn:~$ ",c["accent"],15),
+        f'<rect x="124" y="644" width="8" height="15" fill="{c["accent"]}"/>',
+        t(966,657,"DATA / AI / SYSTEMS",c["muted"],12,"end"),
         '</g></svg>'
     ]
     result="\n".join(pieces)+"\n"
