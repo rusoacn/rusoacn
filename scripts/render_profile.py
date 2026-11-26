@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 
 ROOT=Path(__file__).resolve().parents[1]
 OWNER="rusoacn"
-W,H=1000,548
+W,H=1000,585
 COLS,ROWS=47,34
 MONO="ui-monospace, SFMono-Regular, Consolas, Liberation Mono, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans CJK KR', monospace"
 RAMP=" .,:;irsXA253hMHGS#9B&@"
@@ -58,6 +58,17 @@ def render(mode,data,grid,mask):
         end=right-len(value)*advance-8
         return (t(left,y,".",leader_color,fs)+t(key_x,y,label,key_color,fs)
                 +leader(y,start,end)+t(right,y,value,value_color,fs,"end"))
+    def stat_pair(y,a,b):
+        fs=14.5
+        advance=fs*0.62
+        middle=699
+        def half(x0,x1,label,value):
+            label=label+":"
+            start=x0+len(label)*advance+6
+            end=x1-len(value)*advance-6
+            return t(x0,y,label,key_color,fs)+leader(y,start,end)+t(x1,y,value,value_color,fs,"end")
+        return (t(left,y,".",leader_color,fs)+half(key_x,middle-13,*a)
+                +t(middle,y,"|",detail_color,fs)+half(middle+16,right,*b))
     def section(y,label,xend=right):
         fs=15
         x=left+len(label)*fs*.62+12
@@ -91,7 +102,7 @@ def render(mode,data,grid,mask):
     pieces=[
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-labelledby="title desc">',
         '<title id="title">rusoacn - terminal profile</title>',
-        '<desc id="desc">ASCII account avatar beside education, completed team projects, competition results, independent work, ADsP certification, a dated contribution snapshot and a reported single-video view count.</desc>',
+        '<desc id="desc">ASCII account avatar beside education, completed projects, competition results, independent work, ADsP certification, dated GitHub and AI usage statistics and a reported video view count.</desc>',
         f'<rect width="{W}" height="{H}" rx="15" fill="#161b22"/>' if mode=="dark" else f'<rect width="{W}" height="{H}" rx="15" fill="#f6f8fa"/>',
         f'<g font-family="{MONO}">',
         *art,
@@ -102,21 +113,23 @@ def render(mode,data,grid,mask):
         row(104,"AI Agents","Codex / Claude Code"),
         row(123,"Languages","Python / R / SQL"),
         section(150,"- Completed Projects"),
-        project(170,"G-순환","Policy Decision Support (MVP)","Finalist / In-person PT - Gyeongnam Big Data 2026 (T2)"),
-        project(207,"경남 농산물 부산물 공급·활용 시뮬레이터","","Gyeongnam Big Data Competition 2026 / Track 1 entry"),
-        project(244,"K League","Ranking Forecasting","2026 Big Data Day / Team project"),
-        project(281,"파손 택배 탐지","YOLO / Raspberry Pi","2024 Summer Software Project / Team project"),
+        project(170,"G-순환","Policy Decision Support (Idea Proposal)","Finalist / In-person PT - Gyeongnam Big Data 2026 (T2)"),
+        project(207,"경남 농산물 부산물 공급·활용 시뮬레이터","MVP","Gyeongnam Big Data Competition 2026"),
+        project(244,"K League","Ranking Forecasting","2026 Big Data Day"),
+        project(281,"파손 택배 탐지","YOLO / Raspberry Pi","2024 Summer Software Project"),
         section(321,"- Awards / Results"),
         row(340,"Software Project '24","3rd place"),
         row(359,"Big Data Day '26","2nd place"),
         section(386,"- Independent Work"),
         row(405,"CCC-lib","AI Continuity System (WIP)"),
         row(424,"Smart Factory","Predictive Maintenance MVP"),
-        row(443,"AI Creative","Generative AI Video (~40K views on IG)*"),
-        section(470,"- Record"),
+        row(443,"AI Creative","Generative AI Video (~40K views on IG)"),
+        section(470,"- Stats / 2026-11-26"),
         row(489,"Certification","ADsP"),
-        row(508,"Contributions (1y)","5,503 (2026-11-26)"),
-        t(key_x,531,"* Single video; Aug 2026 record (self-reported).",detail_color,12),
+        stat_pair(508,("Repositories","14"),("Contributions","5,503")),
+        stat_pair(527,("Total Tokens","36.48B"),("Peak Tokens","1.96B")),
+        row(546,"Longest Session","1d 2h"),
+        stat_pair(565,("Best Streak","33d"),("Current Streak","22d")),
         '</g></svg>'
     ]
     result="\n".join(pieces)+"\n"
