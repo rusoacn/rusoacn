@@ -81,7 +81,9 @@ def surface():
     return Image.fromarray(np.stack((a*1.02,a,a*.98),-1).clip(0,255).astype(np.uint8),"RGB")
 def panel(data):
     im=surface();d=ImageDraw.Draw(im)
-    fit(d,LX,25,"RUSOACN",BONE,43,"serif")
+    x=text(d,LX,25,"name: ",BONE,36,"mono")
+    assert x+width("JunYoungJeon","bold",36)<=RX
+    text(d,x,25,"JunYoungJeon",BONE,36,"bold")
     for i,(k,v) in enumerate(data["system"]):
         inline(d,88+26*i,k,v)
     section(d,236,"COMPLETED PROJECTS")
