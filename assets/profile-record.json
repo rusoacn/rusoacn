@@ -1,0 +1,87 @@
+{
+  "date": "2026-11-26",
+  "avatar_source": "Current public GitHub avatar; grayscale snapshot, no inferred identity.",
+  "system": [
+    [
+      "Education",
+      "Hannam University"
+    ],
+    [
+      "Major",
+      "Dept. of AI and Data Science"
+    ],
+    [
+      "OS / IDE",
+      "Windows / VS Code"
+    ],
+    [
+      "AI Agents",
+      "Codex / Claude Code"
+    ],
+    [
+      "Languages",
+      "Python / R / SQL"
+    ]
+  ],
+  "projects": [
+    [
+      "G-순환",
+      "Policy Decision Support (Idea Proposal)",
+      "Finalist / In-person PT - Gyeongnam Big Data 2026 (T2)"
+    ],
+    [
+      "경남 농산물 부산물 공급·활용 시뮬레이터",
+      "MVP",
+      "Gyeongnam Big Data Competition 2026"
+    ],
+    [
+      "K League",
+      "Ranking Forecasting",
+      "2026 Big Data Day"
+    ],
+    [
+      "파손 택배 탐지",
+      "YOLO / Raspberry Pi",
+      "2024 Summer Software Project"
+    ]
+  ],
+  "awards": [
+    [
+      "Software Project '24",
+      "3rd place"
+    ],
+    [
+      "Big Data Day '26",
+      "2nd place"
+    ]
+  ],
+  "independent": [
+    [
+      "CCC-lib",
+      "AI Continuity System (WIP)"
+    ],
+    [
+      "Smart Factory",
+      "Predictive Maintenance MVP"
+    ],
+    [
+      "AI Creative",
+      "Generative AI Video (~40K views on IG)"
+    ]
+  ],
+  "stats": {
+    "repositories": "14",
+    "commits": "6,156",
+    "contributions": "5,503",
+    "certification": "ADsP",
+    "net_lines": "9,174,068",
+    "additions": "9,241,724",
+    "deletions": "67,656",
+    "total_tokens": "36.48B",
+    "peak_tokens": "1.96B",
+    "longest_session": "1d 2h",
+    "best_streak": "33d",
+    "current_streak": "22d"
+  },
+  "notes": "Dated snapshots. Net Lines means Git text-file change accounting, not manually authored source code. See README for scope."
+}
