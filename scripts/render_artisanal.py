@@ -10,8 +10,8 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFilter
 ROOT=Path(__file__).resolve().parents[1]
 A=ROOT/"assets"
 W,H=1440,820
-AX,AY,AW,AH=17,18,512,784
-LX,RX=561,1406
+AX,AY,AW,AH=0,0,820,820
+LX,RX=845,1414
 N,DELAY=24,160
 BONE=(222,220,212); MUTED=(163,158,151); LABEL=(187,182,171)
 RUST=(177,126,115); RULE=(66,61,58); GREEN=(170,184,169); RED=(193,133,127)
@@ -58,27 +58,19 @@ def text(d,x,y,s,color=BONE,size=22,kind="mono",right=False):
         d.text((round(x),y+size),v,font=f,fill=color,anchor="ls")
         x+=f.getlength(v)
     return x
+def fit(d,x,y,s,color=BONE,size=24,kind="mono"):
+    while width(s,kind,size)>RX-x and size>19:
+        size-=1
+    assert width(s,kind,size)<=RX-x,(s,size)
+    text(d,x,y,s,color,size,kind)
 def section(d,y,title):
-    x=text(d,LX,y,title,RUST,19,"bold")
-    d.line((round(x+18),y+15,RX,y+15),fill=RULE,width=1)
-def kv(d,y,label,value,x0=LX,x1=RX,size=22):
-    x=text(d,x0,y,label,MUTED,size)
-    start=round(x+13);end=round(x1-width(value,"mono",size)-13)
-    assert end-start>=5,(label,value,start,end)
-    d.line((start,y+size-5,end,y+size-5),fill=(47,44,42),width=1)
-    text(d,x1,y,value,BONE,size,right=True)
-def pair(d,y,a,b,size=22):
-    mid=(LX+RX)//2
-    kv(d,y,*a,LX,mid-22,size)
-    kv(d,y,*b,mid+19,RX,size)
+    fit(d,LX,y,title,RUST,19,"bold")
+def inline(d,y,label,value,size=23):
+    # Natural inline text, with no artificial fill or column alignment.
+    fit(d,LX,y,label+": "+value,BONE,size)
 def project(d,y,name,desc,detail):
-    x=text(d,LX,y,name,BONE,23,"bold")
-    if desc:
-        s="  /  "+desc
-        assert x+width(s,"mono",22)<=RX,(name,desc)
-        text(d,x,y+1,s,LABEL,22)
-    assert width(detail,"mono",19)<=RX-LX-13
-    text(d,LX+13,y+26,detail,MUTED,20)
+    fit(d,LX,y,name+" / "+desc,BONE,23,"bold")
+    fit(d,LX,y+27,detail,MUTED,19)
 def surface():
     rng=np.random.default_rng(261126)
     yy,xx=np.mgrid[0:H,0:W]
@@ -89,31 +81,18 @@ def surface():
     return Image.fromarray(np.stack((a*1.02,a,a*.98),-1).clip(0,255).astype(np.uint8),"RGB")
 def panel(data):
     im=surface();d=ImageDraw.Draw(im)
-    d.line((542,24,542,H-24),fill=(53,49,46),width=1)
-    text(d,LX,6,"R U S O A C N",BONE,53,"serif")
-    text(d,RX,29,"DATA  /  AI  /  SYSTEMS",MUTED,18,right=True)
-    section(d,75,"01 / SYSTEM")
-    for i,(k,v) in enumerate(data["system"]):kv(d,100+24*i,k,v)
-    section(d,231,"02 / COMPLETED PROJECTS")
-    for i,(a,b,c) in enumerate(data["projects"]):project(d,255+47*i,a,b,c)
-    section(d,449,"03 / AWARDS")
-    pair(d,474,*data["awards"],size=21)
-    section(d,512,"04 / INDEPENDENT WORK")
-    for i,(k,v) in enumerate(data["independent"]):kv(d,537+25*i,k,v,size=22)
-    section(d,622,"05 / RECORD")
-    s=data["stats"]
-    pair(d,648,("Repositories",s["repositories"]),("Commits",s["commits"]))
-    pair(d,674,("Contributions",s["contributions"]),("Certification",s["certification"]))
-    x=text(d,LX,700,"Net Lines",LABEL,20)
-    x=text(d,x+17,700,s["net_lines"],BONE,20)
-    x=text(d,x+18,700,"(",MUTED,20)
-    x=text(d,x+5,700,s["additions"]+"++",GREEN,20)
-    x=text(d,x+7,700," / ",MUTED,20)
-    x=text(d,x+2,700,s["deletions"]+"--",RED,20)
-    text(d,x+4,700,")",MUTED,20)
-    pair(d,726,("Total Tokens",s["total_tokens"]),("Peak Tokens",s["peak_tokens"]))
-    pair(d,752,("Longest Session",s["longest_session"]),("Best Streak",s["best_streak"]))
-    kv(d,778,"Current Streak",s["current_streak"],size=22)
+    fit(d,LX,25,"RUSOACN",BONE,43,"serif")
+    for i,(k,v) in enumerate(data["system"]):
+        inline(d,88+26*i,k,v)
+    section(d,236,"COMPLETED PROJECTS")
+    for i,(a,b,c) in enumerate(data["projects"]):
+        project(d,265+54*i,a,b,c)
+    section(d,493,"AWARDS")
+    for i,(k,v) in enumerate(data["awards"]):
+        inline(d,522+26*i,k,v)
+    section(d,594,"INDEPENDENT WORK")
+    for i,(k,v) in enumerate(data["independent"]):
+        inline(d,623+28*i,k,v,23)
     return im
 def source():
     src=Image.open(A/"avatar-art-source.png").convert("L")
@@ -146,12 +125,6 @@ def main():
     bg=panel(data);src=source();frames=[]
     for i in range(N):
         im=bg.copy();im.paste(art(i/N,src),(AX,AY))
-        d=ImageDraw.Draw(im)
-        # Caption lies over a dark lower gradient, not over the figures.
-        shade=Image.new("RGB",(AW,48),(20,20,20))
-        im.paste(shade,(AX,H-65))
-        text(d,AX+12,H-53,"RECORD / "+data["date"].replace("-","."),MUTED,15)
-        if i<14:d.rectangle((AX+AW-18,H-42,AX+AW-12,H-35),fill=RUST)
         frames.append(im)
     palette=frames[0].quantize(colors=128,method=Image.Quantize.MEDIANCUT,dither=Image.Dither.NONE)
     converted=[im.quantize(palette=palette,dither=Image.Dither.NONE) for im in frames]
@@ -164,7 +137,7 @@ def main():
         for i in range(N):
             im.seek(i);r=im.convert("RGB")
             allhash.append(hashlib.sha256(r.tobytes()).hexdigest())
-            right.append(hashlib.sha256(r.crop((550,0,W,H)).tobytes()).hexdigest())
+            right.append(hashlib.sha256(r.crop((LX-8,0,W,H)).tobytes()).hexdigest())
         assert len(set(allhash))==N and len(set(right))==1
     assert out.stat().st_size<10_000_000,out.stat().st_size
     print("ART_RENDER_PASS",W,H,N,DELAY,out.stat().st_size,flush=True)
