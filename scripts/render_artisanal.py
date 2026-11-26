@@ -4,7 +4,7 @@ Uses a grayscale snapshot of the account's actual public avatar and local fonts.
 No generated illustrations, and no animated changes to profile text.
 """
 from pathlib import Path
-import os, math, json, hashlib
+import os, math, json, hashlib, ast, io, tokenize, token
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFilter
 ROOT=Path(__file__).resolve().parents[1]
@@ -25,8 +25,8 @@ def locate(names):
 # Local industrial sans, with a deliberately condensed display cut.
 # No font binaries are distributed with the artwork.
 F={
-"mono":locate(["bahnschrift.ttf","DejaVuSans.ttf"]),
-"bold":locate(["bahnschrift.ttf","DejaVuSans-Bold.ttf"]),
+"mono":locate(["consola.ttf","DejaVuSansMono.ttf"]),
+"bold":locate(["consolab.ttf","DejaVuSansMono-Bold.ttf"]),
 "serif":locate(["bahnschrift.ttf","DejaVuSans.ttf"]),
 "ko":locate(["NotoSansKR-VF.ttf","malgun.ttf","NotoSansCJK-Regular.ttc"]),
 "kob":locate(["NotoSansKR-VF.ttf","malgunbd.ttf","NotoSansCJK-Bold.ttc"])}
@@ -58,19 +58,88 @@ def text(d,x,y,s,color=BONE,size=22,kind="mono",right=False):
         d.text((round(x),y+size),v,font=f,fill=color,anchor="ls")
         x+=f.getlength(v)
     return x
-def fit(d,x,y,s,color=BONE,size=24,kind="mono"):
-    while width(s,kind,size)>RX-x and size>19:
-        size-=1
-    assert width(s,kind,size)<=RX-x,(s,size)
-    text(d,x,y,s,color,size,kind)
-def section(d,y,title):
-    fit(d,LX,y,title,RUST,19,"bold")
-def inline(d,y,label,value,size=23):
-    # Natural inline text, with no artificial fill or column alignment.
-    fit(d,LX,y,label+": "+value,BONE,size)
-def project(d,y,name,desc,detail):
-    fit(d,LX,y,name+" / "+desc,BONE,23,"bold")
-    fit(d,LX,y+27,detail,MUTED,19)
+# VS Code Dark+ inspired source rendering. The displayed Python is valid,
+# generated from the existing profile record, and does not execute anything.
+EDITOR_BG=(24,24,24)
+EDITOR_FG=(212,212,212)
+EDITOR_NAME=(156,220,254)
+EDITOR_STR=(206,145,120)
+EDITOR_COMMENT=(106,153,85)
+EDITOR_BRACKET=(255,215,0)
+EDITOR_DIM=(128,128,128)
+def profile_code(data):
+    q=lambda s:json.dumps(s,ensure_ascii=False)
+    keys=["education","major","os_ide","agents","languages"]
+    lines=['name = '+q("JunYoungJeon")]
+    lines.extend(k+" = "+q(v) for k,(_,v) in zip(keys,data["system"]))
+    lines+=["","# Completed projects","projects = ["]
+    for i,(name,desc,detail) in enumerate(data["projects"]):
+        if i==0:
+            lines+=["    "+q(name+" / Policy Decision Support")+",",
+                    "    # Idea Proposal / Finalist / In-person PT",
+                    "    # Gyeongnam Big Data 2026 (T2)"]
+        else:
+            lines+=["    "+q(name+" / "+desc)+",","    # "+detail]
+    lines+=["]","","# Awards","awards = ["]
+    lines+=["    "+q(k+": "+v)+"," for k,v in data["awards"]]
+    lines+=["]","","# Independent work","independent = ["]
+    for k,v in data["independent"]:
+        if k=="AI Creative" and " (" in v:
+            lead,tail=v.split(" (",1)
+            lines+=["    "+q(k+": "+lead), "    "+q(" ("+tail)+","]
+        else:
+            lines.append("    "+q(k+": "+v)+",")
+    lines+=["]"]
+    source="\n".join(lines)+"\n"
+    tree=ast.parse(source)
+    vals={n.targets[0].id:ast.literal_eval(n.value) for n in tree.body if isinstance(n,ast.Assign)}
+    assert vals["name"]=="JunYoungJeon"
+    assert len(vals["projects"])==4 and len(vals["awards"])==2 and len(vals["independent"])==3
+    assert vals["awards"]==[k+": "+v for k,v in data["awards"]]
+    assert vals["independent"]==[k+": "+v for k,v in data["independent"]]
+    assert vals["projects"][1:]==[k+" / "+v for k,v,_ in data["projects"][1:]]
+    return source
+def token_color(t):
+    if t.type==token.STRING:return EDITOR_STR
+    if t.type==token.NAME:return EDITOR_NAME
+    if t.type==tokenize.COMMENT:return EDITOR_COMMENT
+    if t.type==token.OP and t.string in "[]{}()":return EDITOR_BRACKET
+    return EDITOR_FG
+def code_panel(d,data):
+    # Minimal editor tab and gutter, no toolbar clutter or dotted leaders.
+    d.rectangle((820,0,W,H),fill=EDITOR_BG)
+    d.rectangle((820,0,W,43),fill=(30,30,30))
+    d.rectangle((820,0,1004,42),fill=EDITOR_BG)
+    d.line((821,1,1003,1),fill=(86,156,214),width=2)
+    text(d,840,8,"profile.py",(204,204,204),22,"mono")
+    text(d,RX,10,"Python",EDITOR_DIM,19,"mono",right=True)
+    source=profile_code(data)
+    lines=source.splitlines()
+    groups={}
+    for t in tokenize.generate_tokens(io.StringIO(source).readline):
+        if t.type in (token.NAME,token.STRING,token.OP,tokenize.COMMENT):
+            if t.start[0]==t.end[0]:groups.setdefault(t.start[0],[]).append(t)
+    start_y=59
+    step=22
+    assert start_y+(len(lines)-1)*step+23<=H-8,(len(lines),H)
+    for i,line in enumerate(lines,1):
+        y=start_y+(i-1)*step
+        if not line:continue
+        size=22
+        while width(line,"mono",size)>RX-LX and size>18:size-=1
+        assert width(line,"mono",size)<=RX-LX,(line,size)
+        x=LX;end=0
+        if line.startswith("    "):
+            d.line((LX+1,y-1,LX+1,y+step-1),fill=(57,57,57),width=1)
+        for t in groups.get(i,[]):
+            l,r=t.start[1],t.end[1]
+            if l>end:x+=width(line[end:l],"mono",size)
+            frag=line[l:r]
+            kind="bold" if i==1 and t.type==token.STRING else "mono"
+            x=text(d,x,y,frag,token_color(t),size,kind)
+            end=r
+        if end<len(line):x=text(d,x,y,line[end:],EDITOR_FG,size)
+        assert x<=RX+1,(i,line,x)
 def surface():
     rng=np.random.default_rng(261126)
     yy,xx=np.mgrid[0:H,0:W]
@@ -80,21 +149,8 @@ def surface():
     a-=2.8*((xx-W*.52)/(W*.55))**2+1.2*((yy-H*.5)/(H*.5))**2
     return Image.fromarray(np.stack((a*1.02,a,a*.98),-1).clip(0,255).astype(np.uint8),"RGB")
 def panel(data):
-    im=surface();d=ImageDraw.Draw(im)
-    x=text(d,LX,25,"name: ",BONE,36,"mono")
-    assert x+width("JunYoungJeon","bold",36)<=RX
-    text(d,x,25,"JunYoungJeon",BONE,36,"bold")
-    for i,(k,v) in enumerate(data["system"]):
-        inline(d,88+26*i,k,v)
-    section(d,236,"COMPLETED PROJECTS")
-    for i,(a,b,c) in enumerate(data["projects"]):
-        project(d,265+54*i,a,b,c)
-    section(d,493,"AWARDS")
-    for i,(k,v) in enumerate(data["awards"]):
-        inline(d,522+26*i,k,v)
-    section(d,594,"INDEPENDENT WORK")
-    for i,(k,v) in enumerate(data["independent"]):
-        inline(d,623+28*i,k,v,23)
+    im=surface()
+    code_panel(ImageDraw.Draw(im),data)
     return im
 def source():
     src=Image.open(A/"avatar-art-source.png").convert("L")
