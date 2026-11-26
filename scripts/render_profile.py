@@ -10,9 +10,9 @@ import xml.etree.ElementTree as ET
 
 ROOT=Path(__file__).resolve().parents[1]
 OWNER="rusoacn"
-W,H=1000,540
+W,H=1000,690
 COLS,ROWS=47,34
-MONO="ui-monospace, SFMono-Regular, Consolas, Liberation Mono, monospace"
+MONO="ui-monospace, SFMono-Regular, Consolas, Liberation Mono, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans CJK KR', monospace"
 RAMP=" .,:;irsXA253hMHGS#9B&@"
 PALETTES={
     "dark":{"bg":"#101215","border":"#292e35","text":"#d4d6d8","muted":"#818992","label":"#a6adb5","line":"#353a41","accent":"#f1eee8","pixel":"#b9c0c5"},
@@ -56,6 +56,11 @@ def render(mode,data,grid,mask):
     def section(y,label,xend=966):
         x=442+len(label)*8.7+16
         return t(442,y,label,c["accent"],14,weight="600")+line(round(x),y-4,xend)
+    def project(y,name,description,detail):
+        return (f'<text x="442" y="{y}" font-size="15">'
+                f'<tspan fill="{key_color}" font-weight="600">{escape(name)}</tspan>'
+                f'<tspan fill="{value_color}"> | {escape(description)}</tspan></text>'
+                +t(454,y+18,"- "+detail,c["muted"],13))
     art=[]
     # Render the full scene with tonal glyphs. Low-density areas fade into the
     # panel, making the silhouettes easier to distinguish in both themes.
@@ -75,40 +80,43 @@ def render(mode,data,grid,mask):
             else:
                 runs.append([tone,ch]);last=tone
         spans="".join(f'<tspan fill="{color}">{escape(chars)}</tspan>' for color,chars in runs)
-        art.append(f'<text x="28" y="{60+y*12.0}" font-size="13.4" xml:space="preserve">{spans}</text>')
+        art.append(f'<text x="28" y="{127+y*12.0}" font-size="13.4" xml:space="preserve">{spans}</text>')
     pieces=[
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-labelledby="title desc">',
         '<title id="title">rusoacn - terminal profile</title>',
-        '<desc id="desc">ASCII account avatar beside education, tools, selected work, ADsP certification, a dated contribution snapshot and a reported single-video view count.</desc>',
+        '<desc id="desc">ASCII account avatar beside education, completed team projects, competition results, independent work, ADsP certification, a dated contribution snapshot and a reported single-video view count.</desc>',
         f'<rect x="0.5" y="0.5" width="{W-1}" height="{H-1}" rx="10" fill="{c["bg"]}" stroke="{c["border"]}"/>',
         f'<g font-family="{MONO}">',
-        t(28,34,"PROFILE / 003",c["muted"],12),
+        t(28,34,"PROFILE / 004",c["muted"],12),
         t(442,34,"rusoacn@localhost",c["accent"],18,weight="600"),
         *art,
         section(62,"- SYSTEM"),
         row(85,"Education","Hannam University"),
-        row(105,"Major","Big Data Convergence"),
-        row(125,"OS","Windows"),
-        row(145,"IDE","VS Code"),
-        row(165,"AI Agents","Codex / Claude Code"),
-        row(185,"Languages","Python / R / SQL"),
-        row(205,"Interests","Avant-garde Fashion"),
-        section(234,"- SELECTED WORK"),
-        row(257,"CCC-lib","AI Continuity System (WIP)"),
-        row(277,"G-Circular","Public Data Analytics Platform"),
-        row(297,"Competition","Gyeongnam / In-person Review"),
-        row(317,"K League","Ranking Prediction"),
-        row(337,"Smart Factory","Predictive Maintenance MVP"),
-        row(357,"AI Creative","Generative Video Production"),
-        section(386,"- RECORD"),
-        row(409,"Certification","ADsP"),
-        row(429,"Contributions (1y)","5,503 (2026-11-26)"),
-        row(449,"Instagram Video","~40K views*"),
-        t(442,477,"* Single video; Aug 2026 record (self-reported).",c["muted"],12),
-        line(28,493,972),
-        t(28,518,"rusoacn:~$ ",c["accent"],15),
-        f'<rect x="124" y="505" width="8" height="15" fill="{c["accent"]}"/>',
-        t(966,518,"DATA / AI / SYSTEMS",c["muted"],12,"end"),
+        row(104,"Major","Big Data Convergence"),
+        row(123,"OS / IDE","Windows / VS Code"),
+        row(142,"AI Agents","Codex / Claude Code"),
+        row(161,"Languages","Python / R / SQL"),
+        section(190,"- COMPLETED PROJECTS"),
+        project(213,"G-순환","Policy Decision Support (MVP)","Finalist / In-person PT - Gyeongnam Big Data 2026 (T2)"),
+        project(255,"부산물 시뮬레이터","Supply & Facility Linkage","Gyeongnam Big Data Competition 2026 / Track 1 entry"),
+        project(297,"K League","Ranking Forecasting","2026 Big Data Day / Team project"),
+        project(339,"파손 택배 탐지","YOLO / Raspberry Pi","2024 Summer Software Project / Team project"),
+        section(383,"- AWARDS / RESULTS"),
+        row(405,"Software Project '24","3rd place (team record)"),
+        row(425,"Big Data Day '26","2nd place / 2 teams"),
+        section(453,"- INDEPENDENT WORK"),
+        row(475,"CCC-lib","AI Continuity System (WIP)"),
+        row(495,"Smart Factory","Predictive Maintenance MVP"),
+        row(515,"AI Creative","Generative Video Production"),
+        section(543,"- RECORD"),
+        row(565,"Certification","ADsP"),
+        row(585,"Contributions (1y)","5,503 (2026-11-26)"),
+        row(605,"Instagram Video","~40K views*"),
+        t(442,628,"* Single video; Aug 2026 record (self-reported).",c["muted"],12),
+        line(28,648,972),
+        t(28,673,"rusoacn:~$ ",c["accent"],15),
+        f'<rect x="124" y="660" width="8" height="15" fill="{c["accent"]}"/>',
+        t(966,673,"DATA / AI / SYSTEMS",c["muted"],12,"end"),
         '</g></svg>'
     ]
     result="\n".join(pieces)+"\n"
