@@ -195,8 +195,8 @@ class CRTGlass:
     """Procedural front-on CRT enclosure and curved glass projection.
 
     The source is the existing animated portrait and actual Python text,
-    not a generated mockup. All geometric and glass effects are static, so
-    the editor remains legible while the underlying portrait animates.
+    not a generated mockup. Glass geometry is static; animated raster effects are applied to the
+    signal before projection, with reduced strength in the editor.
     """
     def __init__(self):
         yy,xx=np.mgrid[0:OH,0:OW].astype(np.float32)
@@ -238,7 +238,7 @@ class CRTGlass:
         # Edge shadow follows the actual shape of the curved glass.
         edge_shadow=1-.44*np.exp(-np.maximum(dist,0)/12)
         glass_vignette=(1-.078*u*u-.055*v*v).clip(.70,1)
-        scan=1-.033*(np.cos(sy*math.pi*2/3.35)+1)*.5
+        scan=1-.105*(np.cos(sy*math.pi*2/3.35)+1)*.5
         self.gain=(edge_shadow*glass_vignette*scan)[...,None].astype(np.float32)
         # Broad, low-energy room reflection and a fine upper-edge glint.
         reflection=(4.6*np.exp(-((u+.61)/.51)**2-((v+.89)/.20)**2)
@@ -259,6 +259,41 @@ class CRTGlass:
         composite=curved*self.mask+self.case*(1-self.mask)
         return Image.fromarray(composite.clip(0,255).astype(np.uint8),"RGB")
 
+class RasterSignal:
+    """A rolling camera-versus-CRT refresh band, with analog sync drift.
+
+    Motion is periodic, not random flashing. The two panels share the same
+    moving raster; distortion and contrast are weaker over the code.
+    """
+    def __init__(self):
+        self.y,self.x=np.mgrid[0:H,0:W].astype(np.float32)
+        # Preserve text legibility without splitting the moving raster.
+        self.strength=1-.64*np.clip((self.x-(AW-20))/100,0,1)
+        self.yi=self.y.astype(np.int32)
+    def render(self,im,t):
+        phase=2*math.pi*t
+        # A wide dark retrace band and its softer luminous leading edge.
+        # Wrap in normalized screen coordinates for a continuous loop.
+        u=(self.y/H-t+.5)%1-.5
+        dark=np.exp(-(u/.078)**2)
+        bright=np.exp(-(((u+.103+.5)%1-.5)/.039)**2)
+        sync=np.exp(-(u/.047)**2)
+        drift=2.6*np.sin(self.y*.021-phase)+1.7*np.sin(self.y*.068+phase)
+        tear=(7.0*np.sin(self.y*.108-phase)+2.4*np.sin(self.y*.23+phase))*sync
+        sx=np.clip(self.x+(drift+tear)*self.strength,0,W-1)
+        x0=sx.astype(np.int32)
+        x1=np.minimum(x0+1,W-1)
+        f=(sx-x0).astype(np.float32)[...,None]
+        raw=np.asarray(im,dtype=np.float32)
+        warped=raw[self.yi,x0]*(1-f)+raw[self.yi,x1]*f
+        # Phosphor raster and a visible rolling exposure wave. No full-screen
+        # flashes, abrupt strobe, or changes to the underlying code content.
+        ripple=.032*np.sin(self.y*.24-phase*2)
+        gain=1+self.strength*(-.29*dark+.16*bright+ripple)
+        lift=self.strength*(7.5*bright-1.0*dark)
+        out=warped*gain[...,None]+lift[...,None]
+        return Image.fromarray(out.clip(0,255).astype(np.uint8),"RGB")
+
 def draw_block_cursor(im,data):
     # A terminal-style insertion cursor on the blank line after the code.
     # Draw before the CRT projection so it shares the screen's glass and glow.
@@ -273,28 +308,35 @@ def main():
     data=json.loads((A/"profile-record.json").read_text(encoding="utf-8"))
     s=data["stats"];n=lambda k:int(s[k].replace(",",""))
     assert n("additions")-n("deletions")==n("net_lines")
-    bg=panel(data);src=source();frames=[];crt=CRTGlass()
+    bg=panel(data);src=source();frames=[];crt=CRTGlass();raster=RasterSignal()
     for i in range(N):
         im=bg.copy();im.paste(art(i/N,src),(AX,AY))
         if (i//CURSOR_BLINK_FRAMES)%2==0:
             draw_block_cursor(im,data)
-        frames.append(crt.render(im))
-    palette=frames[0].quantize(colors=256,method=Image.Quantize.MEDIANCUT,dither=Image.Dither.NONE)
+        frames.append(crt.render(raster.render(im,i/N)))
+    palette=frames[0].quantize(colors=160,method=Image.Quantize.MEDIANCUT,dither=Image.Dither.NONE)
     converted=[im.quantize(palette=palette,dither=Image.Dither.NONE) for im in frames]
     converted[0].save(A/"profile-artisanal.png",optimize=True)
     out=A/"profile-artisanal.gif"
     converted[0].save(out,save_all=True,append_images=converted[1:],duration=DELAY,loop=0,optimize=True,disposal=1)
     with Image.open(out) as im:
         assert im.n_frames==N and im.size==(OW,OH) and im.info.get("loop")==0
-        allhash=[];right=[];cursor_states=[]
+        allhash=[];cursor_levels=[];edge_hash=[];editor_hash=[]
         for i in range(N):
             im.seek(i);r=im.convert("RGB")
+            assert im.info["duration"]==DELAY
             allhash.append(hashlib.sha256(r.tobytes()).hexdigest())
-            right.append(hashlib.sha256(r.crop((1000,0,OW,OH)).tobytes()).hexdigest())
-            cursor_states.append(hashlib.sha256(r.crop((890,0,OW,OH)).tobytes()).hexdigest())
-        assert len(set(allhash))==N and len(set(right))==1
-        assert len(set(cursor_states))==2 and cursor_states.count(cursor_states[0])==N//2
-        assert all((s==cursor_states[0])==((i//CURSOR_BLINK_FRAMES)%2==0) for i,s in enumerate(cursor_states))
+            # The outer bezel must remain still. The active screen may move.
+            edge_hash.append(hashlib.sha256(r.crop((0,0,32,32)).tobytes()).hexdigest())
+            editor_hash.append(hashlib.sha256(r.crop((1000,100,OW-75,800)).tobytes()).hexdigest())
+            cursor=np.asarray(r.crop((895,855,920,883)),dtype=np.float32)
+            cursor_levels.append(float(cursor.mean(axis=2).max()))
+        assert len(set(allhash))==N and len(set(edge_hash))==1
+        assert len(set(editor_hash))>N//2
+        on=[v for i,v in enumerate(cursor_levels) if (i//CURSOR_BLINK_FRAMES)%2==0]
+        off=[v for i,v in enumerate(cursor_levels) if (i//CURSOR_BLINK_FRAMES)%2==1]
+        assert min(on)>max(off)+35,(min(on),max(off))
+        print("RASTER_CURSOR_PASS",round(min(on),1),round(max(off),1),flush=True)
     assert out.stat().st_size<10_000_000,out.stat().st_size
     print("CRT_RENDER_PASS",OW,OH,N,DELAY,out.stat().st_size,flush=True)
 if __name__=="__main__":main()
