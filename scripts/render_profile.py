@@ -97,7 +97,7 @@ def render(mode,data,grid,mask):
         *art,
         section(27,"rusoacn"),
         row(47,"Education","Hannam University"),
-        row(66,"Major","Big Data Convergence"),
+        row(66,"Major","Dept. of AI and Data Science"),
         row(85,"OS / IDE","Windows / VS Code"),
         row(104,"AI Agents","Codex / Claude Code"),
         row(123,"Languages","Python / R / SQL"),
