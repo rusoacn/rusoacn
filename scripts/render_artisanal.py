@@ -22,15 +22,24 @@ def locate(names):
         for n in names:
             if (d/n).is_file():return str(d/n)
     raise FileNotFoundError("Install a matching local system font: "+str(names))
+# Local industrial sans, with a deliberately condensed display cut.
+# No font binaries are distributed with the artwork.
 F={
-"mono":locate(["consola.ttf","DejaVuSansMono.ttf"]),
-"bold":locate(["consolab.ttf","DejaVuSansMono-Bold.ttf"]),
-"serif":locate(["georgia.ttf","DejaVuSerif.ttf"]),
-"ko":locate(["malgun.ttf","NotoSansCJK-Regular.ttc"]),
-"kob":locate(["malgunbd.ttf","NotoSansCJK-Bold.ttc","malgun.ttf"])}
+"mono":locate(["bahnschrift.ttf","DejaVuSans.ttf"]),
+"bold":locate(["bahnschrift.ttf","DejaVuSans-Bold.ttf"]),
+"serif":locate(["bahnschrift.ttf","DejaVuSans.ttf"]),
+"ko":locate(["NotoSansKR-VF.ttf","malgun.ttf","NotoSansCJK-Regular.ttc"]),
+"kob":locate(["NotoSansKR-VF.ttf","malgunbd.ttf","NotoSansCJK-Bold.ttc"])}
 fonts={}
 def font(k,s):
-    if (k,s) not in fonts:fonts[k,s]=ImageFont.truetype(F[k],s)
+    if (k,s) not in fonts:
+        f=ImageFont.truetype(F[k],s)
+        n=Path(F[k]).name.lower()
+        if n=="bahnschrift.ttf":
+            f.set_variation_by_axes({"mono":[400,100],"bold":[550,100],"serif":[350,75]}[k])
+        elif n=="notosanskr-vf.ttf":
+            f.set_variation_by_axes([500 if k=="kob" else 400])
+        fonts[k,s]=f
     return fonts[k,s]
 def parts(s,kind):
     out=[]
@@ -40,7 +49,7 @@ def parts(s,kind):
         else:out.append([k,c])
     return out
 def width(s,k,n):return sum(font(a,n).getlength(b) for a,b in parts(s,k))
-def text(d,x,y,s,color=BONE,size=21,kind="mono",right=False):
+def text(d,x,y,s,color=BONE,size=22,kind="mono",right=False):
     w=width(s,kind,size)
     if right:x-=w
     assert x>=0 and x+w<=W-8,(s,x,w)
@@ -50,27 +59,26 @@ def text(d,x,y,s,color=BONE,size=21,kind="mono",right=False):
         x+=f.getlength(v)
     return x
 def section(d,y,title):
-    x=text(d,LX,y,title,RUST,18)
+    x=text(d,LX,y,title,RUST,19,"bold")
     d.line((round(x+18),y+15,RX,y+15),fill=RULE,width=1)
-def kv(d,y,label,value,x0=LX,x1=RX,size=21):
-    x=text(d,x0,y,label,LABEL,size)
+def kv(d,y,label,value,x0=LX,x1=RX,size=22):
+    x=text(d,x0,y,label,MUTED,size)
     start=round(x+13);end=round(x1-width(value,"mono",size)-13)
     assert end-start>=5,(label,value,start,end)
-    for a in range(start,end,10):
-        d.line((a,y+size-4,min(a+2,end),y+size-4),fill=(83,77,71),width=1)
+    d.line((start,y+size-5,end,y+size-5),fill=(47,44,42),width=1)
     text(d,x1,y,value,BONE,size,right=True)
-def pair(d,y,a,b,size=20):
+def pair(d,y,a,b,size=22):
     mid=(LX+RX)//2
     kv(d,y,*a,LX,mid-22,size)
     kv(d,y,*b,mid+19,RX,size)
 def project(d,y,name,desc,detail):
-    x=text(d,LX,y,name,BONE,22,"bold")
+    x=text(d,LX,y,name,BONE,23,"bold")
     if desc:
         s="  /  "+desc
-        assert x+width(s,"mono",20)<=RX,(name,desc)
-        text(d,x,y+1,s,LABEL,20)
+        assert x+width(s,"mono",22)<=RX,(name,desc)
+        text(d,x,y+1,s,LABEL,22)
     assert width(detail,"mono",19)<=RX-LX-13
-    text(d,LX+13,y+26,detail,MUTED,19)
+    text(d,LX+13,y+26,detail,MUTED,20)
 def surface():
     rng=np.random.default_rng(261126)
     yy,xx=np.mgrid[0:H,0:W]
@@ -82,16 +90,16 @@ def surface():
 def panel(data):
     im=surface();d=ImageDraw.Draw(im)
     d.line((542,24,542,H-24),fill=(53,49,46),width=1)
-    text(d,LX,18,"rusoacn",BONE,39,"serif")
-    text(d,RX,33,"DATA / AI / SYSTEMS",MUTED,17,right=True)
+    text(d,LX,6,"R U S O A C N",BONE,53,"serif")
+    text(d,RX,29,"DATA  /  AI  /  SYSTEMS",MUTED,18,right=True)
     section(d,75,"01 / SYSTEM")
     for i,(k,v) in enumerate(data["system"]):kv(d,100+24*i,k,v)
     section(d,231,"02 / COMPLETED PROJECTS")
     for i,(a,b,c) in enumerate(data["projects"]):project(d,255+47*i,a,b,c)
     section(d,449,"03 / AWARDS")
-    pair(d,474,*data["awards"],size=19)
+    pair(d,474,*data["awards"],size=21)
     section(d,512,"04 / INDEPENDENT WORK")
-    for i,(k,v) in enumerate(data["independent"]):kv(d,537+25*i,k,v,size=20)
+    for i,(k,v) in enumerate(data["independent"]):kv(d,537+25*i,k,v,size=22)
     section(d,622,"05 / RECORD")
     s=data["stats"]
     pair(d,648,("Repositories",s["repositories"]),("Commits",s["commits"]))
@@ -105,7 +113,7 @@ def panel(data):
     text(d,x+4,700,")",MUTED,20)
     pair(d,726,("Total Tokens",s["total_tokens"]),("Peak Tokens",s["peak_tokens"]))
     pair(d,752,("Longest Session",s["longest_session"]),("Best Streak",s["best_streak"]))
-    kv(d,778,"Current Streak",s["current_streak"],size=20)
+    kv(d,778,"Current Streak",s["current_streak"],size=22)
     return im
 def source():
     src=Image.open(A/"avatar-art-source.png").convert("L")
