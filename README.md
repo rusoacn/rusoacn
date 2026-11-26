@@ -1,6 +1,6 @@
 <picture>
-  <source media="(prefers-reduced-motion: reduce)" srcset="https://raw.githubusercontent.com/rusoacn/rusoacn/db6e1bb7c3262668921e059e999d19fc7fca714f/assets/profile-artisanal.png">
-  <img alt="rusoacn - monochrome animated profile, education, selected projects, awards and independent work" src="https://raw.githubusercontent.com/rusoacn/rusoacn/db6e1bb7c3262668921e059e999d19fc7fca714f/assets/profile-artisanal.gif" width="100%">
+  <source media="(prefers-reduced-motion: reduce)" srcset="https://raw.githubusercontent.com/rusoacn/rusoacn/0c8001e6690ef7be8920e94c9b1b421e5392f9c2/assets/profile-artisanal.png">
+  <img alt="rusoacn - monochrome animated avatar beside a Python editor-style profile, education, selected projects, awards and independent work" src="https://raw.githubusercontent.com/rusoacn/rusoacn/0c8001e6690ef7be8920e94c9b1b421e5392f9c2/assets/profile-artisanal.gif" width="100%">
 </picture>
 
 <!-- Image URLs are pinned to the published animation revision to avoid stale caches. Rebuild using scripts/render_artisanal.py, then update both image URLs to the new asset commit. The preceding ASCII SVG assets are retained for rollback. -->
