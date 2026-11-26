@@ -47,14 +47,25 @@ def render(mode,data,grid,mask):
         x=442+len(label)*9.1+20
         return t(442,y,label,c["accent"],14,weight="600")+line(round(x),y-4,xend)
     art=[]
+    # Render the full scene with tonal glyphs. Low-density areas fade into the
+    # panel, making the silhouettes easier to distinguish in both themes.
+    scene_ramp=" .,:;irsXA253hMHGS#9B&@"
+    tones=("#33383e","#515a61","#737d85","#98a0a8","#c1c7cd") if mode=="dark" else ("#dce0e3","#a7afb7","#737d87","#4d5760","#252d36")
     for y,l in enumerate(grid):
-        chars=[]
+        runs=[]
+        last=None
         for x,v in enumerate(l):
             alpha=mask[y][x]/255
             strength=v/255 if mode=="dark" else 1-v/255
-            strength=alpha*(0.13+0.87*strength)**.85
-            chars.append(RAMP[round(strength*(len(RAMP)-1))])
-        art.append(t(28,81+y*12.0,"".join(chars),c["pixel"],13.4,extra=' xml:space="preserve"'))
+            strength=(alpha*strength)**1.2
+            ch=scene_ramp[round(strength*(len(scene_ramp)-1))]
+            tone=tones[min(4,int(strength*5))]
+            if last==tone:
+                runs[-1][1]+=ch
+            else:
+                runs.append([tone,ch]);last=tone
+        spans="".join(f'<tspan fill="{color}">{escape(chars)}</tspan>' for color,chars in runs)
+        art.append(f'<text x="28" y="{81+y*12.0}" font-size="13.4" xml:space="preserve">{spans}</text>')
     pieces=[
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-labelledby="title desc">',
         '<title id="title">rusoacn ? terminal profile</title>',
