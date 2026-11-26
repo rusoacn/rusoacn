@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 
 ROOT=Path(__file__).resolve().parents[1]
 OWNER="rusoacn"
-W,H=1000,674
+W,H=1000,548
 COLS,ROWS=47,34
 MONO="ui-monospace, SFMono-Regular, Consolas, Liberation Mono, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans CJK KR', monospace"
 RAMP=" .,:;irsXA253hMHGS#9B&@"
@@ -40,32 +40,39 @@ def render(mode,data,grid,mask):
     c=PALETTES[mode]
     def t(x,y,s,color=None,fs=15,anchor="start",weight=None,extra=""):
         return f'<text x="{x}" y="{y}" font-size="{fs}" fill="{color or c["text"]}" text-anchor="{anchor}"'+(f' font-weight="{weight}"' if weight else "")+f'{extra}>{escape(str(s))}</text>'
-    def line(x1,y,x2):return f'<path d="M{x1} {y}H{x2}" stroke="{c["line"]}" stroke-width="1"/>'
-    # Neofetch-inspired dotted leaders and restrained syntax colors.
-    key_color="#c6a085" if mode=="dark" else "#91502f"
-    value_color="#e0e2e4" if mode=="dark" else "#233d5c"
-    leader_color="#454b53" if mode=="dark" else "#b9c5d1"
+    left,right=398,984
+    key_x=left+16
+    key_color="#ffa657" if mode=="dark" else "#953800"
+    value_color="#a5d6ff" if mode=="dark" else "#0a3069"
+    leader_color="#616e7f" if mode=="dark" else "#c2cfde"
+    base_color="#c9d1d9" if mode=="dark" else "#24292f"
+    detail_color="#9da9b8" if mode=="dark" else "#596675"
+    def leader(y,start,end):
+        assert end-start>=8,(start,end)
+        return f'<path d="M{start:.1f} {y-4}H{end:.1f}" stroke="{leader_color}" stroke-width="1.8" stroke-dasharray="2 7" stroke-linecap="round"/>'
     def row(y,label,value):
-        fs=15
+        fs=15.5
         advance=fs*0.62
-        start=442+len(label)*advance+12
-        end=966-len(value)*advance-12
-        assert end-start>=12,(label,value)
-        dots=f'<path d="M{start:.1f} {y-4}H{end:.1f}" stroke="{leader_color}" stroke-width="1.6" stroke-dasharray="2 6" stroke-linecap="round"/>'
-        return t(442,y,label,key_color,fs)+dots+t(966,y,value,value_color,fs,"end")
-    def section(y,label,xend=966):
-        x=442+len(label)*8.7+16
-        return t(442,y,label,c["accent"],14,weight="600")+line(round(x),y-4,xend)
+        label=label+":"
+        start=key_x+len(label)*advance+8
+        end=right-len(value)*advance-8
+        return (t(left,y,".",leader_color,fs)+t(key_x,y,label,key_color,fs)
+                +leader(y,start,end)+t(right,y,value,value_color,fs,"end"))
+    def section(y,label,xend=right):
+        fs=15
+        x=left+len(label)*fs*.62+12
+        return t(left,y,label,base_color,fs)+f'<path d="M{x:.1f} {y-4}H{xend}" stroke="{base_color}" stroke-width=".8"/>'
     def project(y,name,description,detail):
-        return (f'<text x="442" y="{y}" font-size="15">'
-                f'<tspan fill="{key_color}" font-weight="600">{escape(name)}</tspan>'
+        return (t(left,y,".",leader_color,15.5)
+                +f'<text x="{key_x}" y="{y}" font-size="15.5">'
+                f'<tspan fill="{key_color}">{escape(name)}</tspan>'
                 + (f'<tspan fill="{value_color}"> | {escape(description)}</tspan>' if description else "") + '</text>'
-                +t(454,y+18,"- "+detail,c["muted"],13))
+                +t(key_x+12,y+16,"- "+detail,detail_color,13))
     art=[]
     # Render the full scene with tonal glyphs. Low-density areas fade into the
     # panel, making the silhouettes easier to distinguish in both themes.
     scene_ramp=" .,:;irsXA253hMHGS#9B&@"
-    tones=("#33383e","#515a61","#737d85","#98a0a8","#c1c7cd") if mode=="dark" else ("#dce0e3","#a7afb7","#737d87","#4d5760","#252d36")
+    tones=("#59636f","#74808c","#8f9aa6","#aab4bf","#c9d1d9") if mode=="dark" else ("#a9b5c0","#81909d","#5f6d7a","#414d59","#24292f")
     for y,l in enumerate(grid):
         runs=[]
         last=None
@@ -80,42 +87,36 @@ def render(mode,data,grid,mask):
             else:
                 runs.append([tone,ch]);last=tone
         spans="".join(f'<tspan fill="{color}">{escape(chars)}</tspan>' for color,chars in runs)
-        art.append(f'<text x="28" y="{127+y*12.0}" font-size="13.4" xml:space="preserve">{spans}</text>')
+        art.append(f'<text x="15" y="{27+y*15.2}" font-size="15.2" textLength="365" lengthAdjust="spacingAndGlyphs" xml:space="preserve">{spans}</text>')
     pieces=[
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-labelledby="title desc">',
         '<title id="title">rusoacn - terminal profile</title>',
         '<desc id="desc">ASCII account avatar beside education, completed team projects, competition results, independent work, ADsP certification, a dated contribution snapshot and a reported single-video view count.</desc>',
-        f'<rect x="0.5" y="0.5" width="{W-1}" height="{H-1}" rx="10" fill="{c["bg"]}" stroke="{c["border"]}"/>',
+        f'<rect width="{W}" height="{H}" rx="15" fill="#161b22"/>' if mode=="dark" else f'<rect width="{W}" height="{H}" rx="15" fill="#f6f8fa"/>',
         f'<g font-family="{MONO}">',
-        t(28,34,"PROFILE / 005",c["muted"],12),
-        t(442,34,"rusoacn@localhost",c["accent"],18,weight="600"),
         *art,
-        section(62,"- SYSTEM"),
-        row(85,"Education","Hannam University"),
-        row(104,"Major","Big Data Convergence"),
-        row(123,"OS / IDE","Windows / VS Code"),
-        row(142,"AI Agents","Codex / Claude Code"),
-        row(161,"Languages","Python / R / SQL"),
-        section(190,"- COMPLETED PROJECTS"),
-        project(213,"G-순환","Policy Decision Support (MVP)","Finalist / In-person PT - Gyeongnam Big Data 2026 (T2)"),
-        project(255,"경남 농산물 부산물 공급·활용 시뮬레이터","","Gyeongnam Big Data Competition 2026 / Track 1 entry"),
-        project(297,"K League","Ranking Forecasting","2026 Big Data Day / Team project"),
-        project(339,"파손 택배 탐지","YOLO / Raspberry Pi","2024 Summer Software Project / Team project"),
-        section(383,"- AWARDS / RESULTS"),
-        row(405,"Software Project '24","3rd place"),
-        row(425,"Big Data Day '26","2nd place"),
-        section(453,"- INDEPENDENT WORK"),
-        row(475,"CCC-lib","AI Continuity System (WIP)"),
-        row(495,"Smart Factory","Predictive Maintenance MVP"),
-        row(515,"AI Creative","Generative AI Video (~40K views on IG)*"),
-        section(543,"- RECORD"),
-        row(565,"Certification","ADsP"),
-        row(585,"Contributions (1y)","5,503 (2026-11-26)"),
-        t(442,611,"* Single video; Aug 2026 record (self-reported).",c["muted"],12),
-        line(28,632,972),
-        t(28,657,"rusoacn:~$ ",c["accent"],15),
-        f'<rect x="124" y="644" width="8" height="15" fill="{c["accent"]}"/>',
-        t(966,657,"DATA / AI / SYSTEMS",c["muted"],12,"end"),
+        section(27,"rusoacn"),
+        row(47,"Education","Hannam University"),
+        row(66,"Major","Big Data Convergence"),
+        row(85,"OS / IDE","Windows / VS Code"),
+        row(104,"AI Agents","Codex / Claude Code"),
+        row(123,"Languages","Python / R / SQL"),
+        section(150,"- Completed Projects"),
+        project(170,"G-순환","Policy Decision Support (MVP)","Finalist / In-person PT - Gyeongnam Big Data 2026 (T2)"),
+        project(207,"경남 농산물 부산물 공급·활용 시뮬레이터","","Gyeongnam Big Data Competition 2026 / Track 1 entry"),
+        project(244,"K League","Ranking Forecasting","2026 Big Data Day / Team project"),
+        project(281,"파손 택배 탐지","YOLO / Raspberry Pi","2024 Summer Software Project / Team project"),
+        section(321,"- Awards / Results"),
+        row(340,"Software Project '24","3rd place"),
+        row(359,"Big Data Day '26","2nd place"),
+        section(386,"- Independent Work"),
+        row(405,"CCC-lib","AI Continuity System (WIP)"),
+        row(424,"Smart Factory","Predictive Maintenance MVP"),
+        row(443,"AI Creative","Generative AI Video (~40K views on IG)*"),
+        section(470,"- Record"),
+        row(489,"Certification","ADsP"),
+        row(508,"Contributions (1y)","5,503 (2026-11-26)"),
+        t(key_x,531,"* Single video; Aug 2026 record (self-reported).",detail_color,12),
         '</g></svg>'
     ]
     result="\n".join(pieces)+"\n"
