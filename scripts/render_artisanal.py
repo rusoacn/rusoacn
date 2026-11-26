@@ -10,6 +10,8 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFilter
 ROOT=Path(__file__).resolve().parents[1]
 A=ROOT/"assets"
 W,H=1440,820
+# Camera-facing CRT housing; the existing W,H canvas is its signal.
+OW,OH=1560,968
 AX,AY,AW,AH=0,0,820,820
 LX,RX=845,1414
 N,DELAY=24,160
@@ -187,27 +189,95 @@ def art(t,src):
     f=(edge/8).clip(0,1)
     rgb=rgb*f[...,None]+.065*(1-f[...,None])
     return Image.fromarray((rgb*255).astype(np.uint8),"RGB")
+class CRTGlass:
+    """Procedural front-on CRT enclosure and curved glass projection.
+
+    The source is the existing animated portrait and actual Python text,
+    not a generated mockup. All geometric and glass effects are static, so
+    the editor remains legible while the underlying portrait animates.
+    """
+    def __init__(self):
+        yy,xx=np.mgrid[0:OH,0:OW].astype(np.float32)
+        # Close, eye-level view, with a deeper lower bezel and bowed edges.
+        cx,cy=OW*.5,OH*.491
+        rx,ry=OW*.465,OH*.448
+        u=(xx-cx)/rx
+        v=(yy-cy)/ry
+        au,av=np.abs(u),np.abs(v)
+        # Convex rectangular glass with naturally rounded corners.
+        shape=(au**12+av**12)**(1/12)
+        dist=(1-shape)*min(rx,ry)
+        mask=np.clip(dist+.55,0,1).astype(np.float32)
+        self.mask=mask[...,None]
+        rng=np.random.default_rng(200426)
+        noise=rng.normal(0,.7,(OH,OW)).astype(np.float32)
+        # Molded, matte charcoal case and recessed glass seating.
+        rad=(u*u*.55+v*v*.45)
+        outer=(17+3.2*(-v)-3.5*rad+noise).clip(3,26)
+        outside=np.maximum(-dist,0)
+        bevel=(17+5*(-v)+2*(-u))*np.exp(-((outside-14)/10.5)**2)
+        lip=10*np.exp(-((outside-26)/7)**2)
+        seam=12*np.exp(-(outside/3.8)**2)
+        case=(outer+bevel+lip-seam).clip(3,48)
+        # Slight directional light across the molded outer case.
+        case+=5*np.exp(-((yy-12)/10)**2)*np.exp(-((xx-OW*.36)/(OW*.60))**2)
+        case-=5*np.exp(-((yy-(OH-8))/10)**2)
+        self.case=np.stack((case*1.04,case,case*.97),-1).clip(0,255)
+        # Inverse barrel mapping. The image bows with the face of the tube.
+        su=u*(1.030+.030*v*v+.020*u*u)
+        sv=v*(1.028+.036*u*u+.019*v*v)
+        sx=np.clip((su+1)*.5*(W-1),0,W-1)
+        sy=np.clip((sv+1)*.5*(H-1),0,H-1)
+        self.x0=sx.astype(np.int32); self.y0=sy.astype(np.int32)
+        self.x1=np.minimum(self.x0+1,W-1)
+        self.y1=np.minimum(self.y0+1,H-1)
+        self.fx=(sx-self.x0).astype(np.float32)[...,None]
+        self.fy=(sy-self.y0).astype(np.float32)[...,None]
+        # Edge shadow follows the actual shape of the curved glass.
+        edge_shadow=1-.44*np.exp(-np.maximum(dist,0)/12)
+        glass_vignette=(1-.078*u*u-.055*v*v).clip(.70,1)
+        scan=1-.033*(np.cos(sy*math.pi*2/3.35)+1)*.5
+        self.gain=(edge_shadow*glass_vignette*scan)[...,None].astype(np.float32)
+        # Broad, low-energy room reflection and a fine upper-edge glint.
+        reflection=(4.6*np.exp(-((u+.61)/.51)**2-((v+.89)/.20)**2)
+                    +2.4*np.exp(-((u+.84)/.16)**2-((v+.12)/.85)**2)
+                    +2.0*np.exp(-((dist-8)/3.2)**2)*np.clip(-v,0,1))
+        reflection+=.42*noise
+        self.reflection=np.stack((reflection*1.04,reflection,reflection*.98),-1).astype(np.float32)
+    def render(self,signal):
+        assert signal.size==(W,H)
+        # Gentle analog halation; preserve the high-frequency code text.
+        raw=np.asarray(signal,dtype=np.float32)
+        bloom=np.asarray(signal.filter(ImageFilter.GaussianBlur(2.1)),dtype=np.float32)
+        raw=raw*.965+bloom*.035
+        a=raw[self.y0,self.x0]*(1-self.fx)+raw[self.y0,self.x1]*self.fx
+        b=raw[self.y1,self.x0]*(1-self.fx)+raw[self.y1,self.x1]*self.fx
+        curved=a*(1-self.fy)+b*self.fy
+        curved=curved*self.gain+self.reflection
+        composite=curved*self.mask+self.case*(1-self.mask)
+        return Image.fromarray(composite.clip(0,255).astype(np.uint8),"RGB")
+
 def main():
     data=json.loads((A/"profile-record.json").read_text(encoding="utf-8"))
     s=data["stats"];n=lambda k:int(s[k].replace(",",""))
     assert n("additions")-n("deletions")==n("net_lines")
-    bg=panel(data);src=source();frames=[]
+    bg=panel(data);src=source();frames=[];crt=CRTGlass()
     for i in range(N):
         im=bg.copy();im.paste(art(i/N,src),(AX,AY))
-        frames.append(im)
+        frames.append(crt.render(im))
     palette=frames[0].quantize(colors=256,method=Image.Quantize.MEDIANCUT,dither=Image.Dither.NONE)
     converted=[im.quantize(palette=palette,dither=Image.Dither.NONE) for im in frames]
     converted[0].save(A/"profile-artisanal.png",optimize=True)
     out=A/"profile-artisanal.gif"
     converted[0].save(out,save_all=True,append_images=converted[1:],duration=DELAY,loop=0,optimize=True,disposal=1)
     with Image.open(out) as im:
-        assert im.n_frames==N and im.size==(W,H) and im.info.get("loop")==0
+        assert im.n_frames==N and im.size==(OW,OH) and im.info.get("loop")==0
         allhash=[];right=[]
         for i in range(N):
             im.seek(i);r=im.convert("RGB")
             allhash.append(hashlib.sha256(r.tobytes()).hexdigest())
-            right.append(hashlib.sha256(r.crop((LX-8,0,W,H)).tobytes()).hexdigest())
+            right.append(hashlib.sha256(r.crop((1000,0,OW,OH)).tobytes()).hexdigest())
         assert len(set(allhash))==N and len(set(right))==1
     assert out.stat().st_size<10_000_000,out.stat().st_size
-    print("ART_RENDER_PASS",W,H,N,DELAY,out.stat().st_size,flush=True)
+    print("CRT_RENDER_PASS",OW,OH,N,DELAY,out.stat().st_size,flush=True)
 if __name__=="__main__":main()
