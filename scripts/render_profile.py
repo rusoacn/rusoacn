@@ -41,10 +41,20 @@ def render(mode,data,grid,mask):
     def t(x,y,s,color=None,fs=15,anchor="start",weight=None,extra=""):
         return f'<text x="{x}" y="{y}" font-size="{fs}" fill="{color or c["text"]}" text-anchor="{anchor}"'+(f' font-weight="{weight}"' if weight else "")+f'{extra}>{escape(str(s))}</text>'
     def line(x1,y,x2):return f'<path d="M{x1} {y}H{x2}" stroke="{c["line"]}" stroke-width="1"/>'
+    # Neofetch-inspired dotted leaders and restrained syntax colors.
+    key_color="#c6a085" if mode=="dark" else "#91502f"
+    value_color="#e0e2e4" if mode=="dark" else "#233d5c"
+    leader_color="#454b53" if mode=="dark" else "#b9c5d1"
     def row(y,label,value):
-        return t(442,y,label,c["label"],15)+t(966,y,value,c["text"],15,"end")
+        fs=15
+        advance=fs*0.62
+        start=442+len(label)*advance+12
+        end=966-len(value)*advance-12
+        assert end-start>=12,(label,value)
+        dots=f'<path d="M{start:.1f} {y-4}H{end:.1f}" stroke="{leader_color}" stroke-width="1.6" stroke-dasharray="2 6" stroke-linecap="round"/>'
+        return t(442,y,label,key_color,fs)+dots+t(966,y,value,value_color,fs,"end")
     def section(y,label,xend=966):
-        x=442+len(label)*9.1+20
+        x=442+len(label)*8.7+16
         return t(442,y,label,c["accent"],14,weight="600")+line(round(x),y-4,xend)
     art=[]
     # Render the full scene with tonal glyphs. Low-density areas fade into the
@@ -65,37 +75,36 @@ def render(mode,data,grid,mask):
             else:
                 runs.append([tone,ch]);last=tone
         spans="".join(f'<tspan fill="{color}">{escape(chars)}</tspan>' for color,chars in runs)
-        art.append(f'<text x="28" y="{81+y*12.0}" font-size="13.4" xml:space="preserve">{spans}</text>')
+        art.append(f'<text x="28" y="{60+y*12.0}" font-size="13.4" xml:space="preserve">{spans}</text>')
     pieces=[
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-labelledby="title desc">',
-        '<title id="title">rusoacn ? terminal profile</title>',
-        '<desc id="desc">ASCII rendering of the account avatar beside system information and verified public GitHub statistics.</desc>',
+        '<title id="title">rusoacn - terminal profile</title>',
+        '<desc id="desc">ASCII rendering of the account avatar beside technical interests, selected work, certification and a dated contribution snapshot.</desc>',
         f'<rect x="0.5" y="0.5" width="{W-1}" height="{H-1}" rx="10" fill="{c["bg"]}" stroke="{c["border"]}"/>',
         f'<g font-family="{MONO}">',
-        t(28,34,"rusoacn@localhost",c["accent"],18,weight="600"),
-        t(966,34,"PROFILE / 001",c["muted"],12,"end"),
-        line(28,51,972),
-        f'<path d="M416 67V485" stroke="{c["line"]}" stroke-width="1"/>',
+        t(28,34,"PROFILE / 002",c["muted"],12),
+        t(442,34,"rusoacn@localhost",c["accent"],18,weight="600"),
         *art,
-        section(85,"SYSTEM"),
-        row(110,"OS","Windows"),
-        row(134,"Editor","VS Code"),
-        row(158,"Languages","Python / R / SQL"),
-        row(182,"Field","Data Science / AI"),
-        row(206,"Focus","Machine Learning"),
-        row(230,"Build","Automation / Systems"),
-        section(271,"GITHUB / PUBLIC"),
-        row(296,"Repositories",f'{data["public_repos"]:,}'),
-        row(320,"Stars received",f'{data["stars_received"]:,}'),
-        row(344,"Followers",f'{data["followers"]:,}'),
-        row(368,"Following",f'{data["following"]:,}'),
-        section(409,"STATUS"),
-        t(442,435,"Building systems.",c["text"],16),
-        t(442,459,"Exploring data, code and form.",c["muted"],14),
+        section(62,"- SYSTEM"),
+        row(86,"OS","Windows"),
+        row(108,"IDE","VS Code"),
+        row(130,"AI Agents","Codex / Claude"),
+        row(152,"Languages","Python / R / SQL"),
+        row(174,"Field","Data Science / ML"),
+        row(196,"Interests","Avant-garde fashion"),
+        section(228,"- SELECTED WORK"),
+        row(252,"CCC-lib","AI continuity system (WIP)"),
+        row(274,"Gyeongnam contest","G-Cycle / In-person review"),
+        row(296,"K League DATA:ON","Rank forecasting"),
+        row(318,"Smart Factory","Predictive maintenance MVP"),
+        row(340,"AI Creative","AI advertising videos"),
+        section(382,"- RECORD"),
+        row(408,"Certification","ADsP"),
+        row(434,"Contributions (1y)","5,503 as of 2026-11-26"),
         line(28,493,972),
         t(28,518,"rusoacn:~$ ",c["accent"],15),
         f'<rect x="124" y="505" width="8" height="15" fill="{c["accent"]}"/>',
-        t(966,518,"PUBLIC PROFILE  /  DATA + SYSTEMS",c["muted"],12,"end"),
+        t(966,518,"DATA / AI / SYSTEMS",c["muted"],12,"end"),
         '</g></svg>'
     ]
     result="\n".join(pieces)+"\n"
