@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Reproducible procedural profile artwork; Python, Pillow and NumPy.
-Uses a grayscale snapshot of the account's actual public avatar and local fonts.
+Uses the user-supplied color portrait and local fonts.
 No generated illustrations, and no animated changes to profile text.
 """
 from pathlib import Path
@@ -153,29 +153,40 @@ def panel(data):
     code_panel(ImageDraw.Draw(im),data)
     return im
 def source():
-    src=Image.open(A/"avatar-art-source.png").convert("L")
-    # Preserve the actual figures and their proportions. Soft side crop only.
-    src=ImageOps.fit(src,(AW,AH),Image.Resampling.LANCZOS,centering=(.5,.50))
-    return np.asarray(ImageOps.autocontrast(src,cutoff=1),dtype=np.float32)/255
+    src=Image.open(A/"portrait-analog-source.jpg").convert("RGB")
+    # Center the actual source portrait; do not synthesize a replacement face.
+    src=ImageOps.fit(src,(AW,AH),Image.Resampling.LANCZOS,centering=(.49,.5))
+    src=src.filter(ImageFilter.GaussianBlur(.48))
+    return np.asarray(src,dtype=np.float32)/255
+
 def art(t,src):
     yy,xx=np.mgrid[0:AH,0:AW]
-    th=2*math.pi*t
-    shift=np.rint(1.5*np.sin(yy*.031+th)+.55*np.sin(yy*.115-th)).astype(int)
-    raw=src[yy,np.clip(xx+shift,0,AW-1)]
-    lum=(raw**1.3+.018*math.sin(th)+.012*np.sin(yy*.012-th)).clip(0,1)
-    bayer=np.array([[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]],dtype=np.float32)
-    pattern=(bayer[yy%4,xx%4]+.5)/16-.5
-    q=np.floor(np.clip(lum*12+pattern*.9,0,12))/12
-    grain=np.random.default_rng(905).normal(0,2,(AH,AW))
-    vign=(1-.30*((xx-AW*.49)/(AW*.53))**2-.18*((yy-AH*.43)/(AH*.58))**2).clip(.25,1)
-    light=(18+q*176)*vign+grain+.9*(yy%2)
-    center=AH*(.5+.27*math.sin(th))
-    light+=np.exp(-((yy-center)/48)**2)*3.4
+    phase=2*math.pi*t
+    # Stable film texture and gently drifting analog signal.
+    displacement=np.rint(1.0*np.sin(yy*.025+phase)+.45*np.sin(yy*.11-phase)).astype(int)
+    pos=np.clip(xx+displacement,0,AW-1)
+    rgb=src[yy,pos].copy()
+    # Fine color bleed, subdued cyan and magenta, slightly lifted black levels.
+    rgb[...,0]=src[yy,np.clip(pos+1,0,AW-1),0]
+    rgb[...,2]=src[yy,np.clip(pos-1,0,AW-1),2]
+    lum=rgb[...,0]*.2126+rgb[...,1]*.7152+rgb[...,2]*.0722
+    rgb=rgb*.69+lum[...,None]*.31
+    rgb=np.power(rgb.clip(0,1),.96)*.90+.035
+    # Film print color crossover, restrained rather than neon.
+    shadow=(1-lum)[...,None]
+    rgb+=shadow*np.array([.020,-.008,.012],dtype=np.float32)
+    rgb+=lum[...,None]*np.array([.018,.008,-.012],dtype=np.float32)
+    vignette=(1-.18*((xx-AW*.50)/(AW*.55))**2-.12*((yy-AH*.48)/(AH*.55))**2).clip(.55,1)
+    grain=np.random.default_rng(9126).normal(0,.013,(AH,AW))
+    scan=((yy%3)==0)*.018
+    band=np.exp(-((yy-AH*(.50+.31*math.sin(phase)))/48)**2)*.013
+    exposure=1+.017*math.sin(phase)
+    rgb=(rgb*exposure*vignette[...,None]+(grain-scan+band)[...,None]).clip(0,1)
+    # Very faint edge falloff, preserving the original image and skin tones.
     edge=np.minimum(np.minimum(xx,AW-1-xx),np.minimum(yy,AH-1-yy))
-    fade=(edge/19).clip(0,1);fade=fade*fade*(3-2*fade)
-    light=20*(1-fade)+light*fade
-    rgb=np.stack((light*1.015,light,light*.975),-1).clip(0,255).astype(np.uint8)
-    return Image.fromarray(rgb,"RGB")
+    f=(edge/8).clip(0,1)
+    rgb=rgb*f[...,None]+.065*(1-f[...,None])
+    return Image.fromarray((rgb*255).astype(np.uint8),"RGB")
 def main():
     data=json.loads((A/"profile-record.json").read_text(encoding="utf-8"))
     s=data["stats"];n=lambda k:int(s[k].replace(",",""))
@@ -184,7 +195,7 @@ def main():
     for i in range(N):
         im=bg.copy();im.paste(art(i/N,src),(AX,AY))
         frames.append(im)
-    palette=frames[0].quantize(colors=128,method=Image.Quantize.MEDIANCUT,dither=Image.Dither.NONE)
+    palette=frames[0].quantize(colors=256,method=Image.Quantize.MEDIANCUT,dither=Image.Dither.NONE)
     converted=[im.quantize(palette=palette,dither=Image.Dither.NONE) for im in frames]
     converted[0].save(A/"profile-artisanal.png",optimize=True)
     out=A/"profile-artisanal.gif"
